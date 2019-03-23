@@ -25,7 +25,7 @@ class TwitterPollingResource(MethodView):
         data = request.json
         if "channel" not in data:
             logger.error(
-                "[Busy-Beaver] Twitter Summary Poll -- need channel in JSON body",
+                "[Busy-Beaver] Twitter Summary Poll -- need channel in JSON body"
             )
             return
         post_tweets_to_slack(username=TWITTER_USERNAME, channel=data["channel"])

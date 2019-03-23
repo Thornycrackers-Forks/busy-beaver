@@ -103,6 +103,7 @@ def test_raising_valueerror_by_passing_incorrect_roles_type():
     api = Flask(__name__)
 
     with pytest.raises(ValueError):
+
         @api.route("/auth")
         @authentication_required(roles="user")
         def auth():
