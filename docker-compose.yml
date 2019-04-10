@@ -1,36 +1,22 @@
 version: '3.6'
-
-volumes:
-  pgdata:
-
-
 services:
-  db:
-    image: postgres:10.3-alpine
-    environment:
-      POSTGRES_DB: busy-beaver
-      POSTGRES_USER: bbdev_user
-      POSTGRES_PASSWORD: bbdev_password
-    volumes:
-      - pgdata:/var/lib/postgresql/data/
-    ports:
-      - "9432:5432"
-
   app:
+    network_mode: "bridge"
     build:
       context: .
       dockerfile: ./docker/dev/Dockerfile
-    command: ["gunicorn", "busy_beaver:app", "-b", "0.0.0.0:5100", "--reload", "--timeout",  "100000"]
+    # command: ["gunicorn", "busy_beaver:app", "-b", "0.0.0.0:5100", "--reload", "--timeout",  "100000"]
+    command: ["/bin/bash"]
     env_file: .env
     environment:
       PYTHONPATH: .
       FLASK_APP: /app/busy_beaver/__init__.py
       FLASK_ENV: development
-      DATABASE_URI: postgresql://bbdev_user:bbdev_password@db:5432/busy-beaver
+      DATABASE_URI: postgresql://root:1234@172.17.0.2:5432/busy_beaver
     stdin_open: true
     tty: true
     volumes:
       - .:/app/
       - ./logs:/app/logs/
     ports:
-      - 5000:5100
+      - 8000

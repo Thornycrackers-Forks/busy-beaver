@@ -8,7 +8,7 @@ help:
 	@echo ' make attach           attach to process for debugging purposes    '
 	@echo ' make migration        create migration m="message"                '
 	@echo ' make migrate-up       run all migration                           '
-	@echo ' make migrate-dow      roll back last migration                    '
+	@echo ' make migrate-down     roll back last migration                    '
 	@echo ' make test             run tests                                   '
 	@echo ' make test-cov         run tests with coverage.py                  '
 	@echo ' make test-covhtml     run tests and load html coverage report     '
@@ -17,7 +17,7 @@ help:
 	@echo '                                                                   '
 	@echo ' make debug            attach to app container for debugging       '
 	@echo ' make log              attach to logs                              '
-	@echo ' make shell            log into into app container -- bash-shell   '
+	@echo ' make enter            log into into app container -- bash-shell   '
 	@echo ' make shell-dev        open ipython shell with application context '
 	@echo ' make ngrok            start ngrok to forward port                 '
 	@echo '                                                                   '
@@ -29,59 +29,59 @@ help:
 	@echo '                                                                   '
 
 build:
-	docker-compose build
+	docker-compose -p busy_beaver build
 
 up:
-	docker-compose up -d
-	make migrate-up
+	docker-compose -p busy_beaver up -d
 
-down:
-	docker-compose down
+clean:
+	docker-compose -p busy_beaver down
 
 attach:
-	docker attach `docker-compose ps -q app`
+	docker attach `docker-compose -p busy_beaver ps -q app`
 
 migration: ## Create migrations
-	docker-compose exec app flask db migrate -m "$(m)"
+	docker-compose -p busy_beaver exec app flask db migrate -m "$(m)"
 
 migrate-up: ## Run migrations
-	docker-compose exec app flask db upgrade
+	docker-compose -p busy_beaver exec app flask db upgrade
 
 migrate-down: ## Rollback migrations
-	docker-compose exec app flask db downgrade
+	docker-compose -p busy_beaver exec app flask db downgrade
 
 test:
-	docker-compose exec app pytest $(args)
+	docker-compose -p busy_beaver exec app pytest $(args)
 
 test-cov:
-	docker-compose exec app pytest --cov ./
+	docker-compose -p busy_beaver exec app pytest --cov ./
 
 test-covhtml:
-	docker-compose exec app pytest --cov --cov-report html && open ./htmlcov/index.html
+	docker-compose -p busy_beaver exec app pytest --cov --cov-report html && open ./htmlcov/index.html
 
 test-pdb:
-	docker-compose exec app pytest --pdb -s
+	docker-compose -p busy_beaver exec app pytest --pdb -s
 
 test-skipvcr:
-	docker-compose exec app pytest -m 'not vcr'
+	docker-compose -p busy_beaver exec app pytest -m 'not vcr'
 
 lint:
-	docker-compose exec app flake8
+	docker-compose -p busy_beaver exec app flake8
+	docker-compose -p busy_beaver exec app black .
 
 log:
-	docker logs `docker-compose ps -q app`
+	docker logs `docker-compose -p busy_beaver ps -q app`
 
 debug:
-	docker attach `docker-compose ps -q app`
+	docker attach `docker-compose -p busy_beaver ps -q app`
 
-shell:
-	docker-compose exec app bash
+enter:
+	docker-compose -p busy_beaver exec app bash
 
 shell-db:
-	docker-compose exec db psql -w --username "bbdev_user" --dbname "busy-beaver"
+	docker-compose -p busy_beaver exec db psql -w --username "bbdev_user" --dbname "busy-beaver"
 
 shell-dev:
-	docker-compose exec app ipython -i scripts/dev/shell.py
+	docker-compose -p busy_beaver exec app ipython -i scripts/dev/shell.py
 
 dev-shell: shell-dev
 
@@ -92,17 +92,17 @@ prod-build-image:
 	docker build -f docker/prod/Dockerfile --tag alysivji/busy-beaver .
 
 prod-build:
-	docker-compose -f docker-compose.prod.yml build
+	docker-compose -p busy_beaver -f docker-compose.prod.yml build
 
 prod-migrate-up:
-	docker-compose -f docker-compose.prod.yml exec app flask db upgrade
+	docker-compose -p busy_beaver -f docker-compose.prod.yml exec app flask db upgrade
 
 prod-up:
-	docker-compose -f docker-compose.prod.yml up -d
+	docker-compose -p busy_beaver -f docker-compose.prod.yml up -d
 	make prod-migrate-up
 
 prod-down:
-	docker-compose -f docker-compose.prod.yml down
+	docker-compose -p busy_beaver -f docker-compose.prod.yml down
 
 prod-pull-image:
 	docker pull alysivji/busy-beaver:latest
